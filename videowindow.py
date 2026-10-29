@@ -7,6 +7,7 @@ user32 = ctypes.windll.user32
 user32.MonitorFromWindow.restype = wintypes.HMONITOR
 user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
 user32.GetMonitorInfoW.argtypes = [wintypes.HMONITOR, ctypes.c_void_p]
+user32.IsZoomed.argtypes = [wintypes.HWND]
 user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
                                 ctypes.c_int, ctypes.c_int, wintypes.UINT]
 
@@ -47,7 +48,9 @@ def _rect(hwnd, getter):
 
 def fit_to_video(hwnd, video_w, video_h):
     """Giver vinduets videoflade samme format som videoen, centreret hvor vinduet er nu.
-    Gør intet i fuldskærm."""
+    Gør intet når vinduet er maksimeret eller i fuldskærm: der bliver det, og videoen tilpasses indeni."""
+    if user32.IsZoomed(hwnd):
+        return
     info = MONITORINFO(cbSize=ctypes.sizeof(MONITORINFO))
     user32.GetMonitorInfoW(user32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), ctypes.byref(info))
     mon, work = info.rcMonitor, info.rcWork
