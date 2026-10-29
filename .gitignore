@@ -1,0 +1,8 @@
+# byggeresultater
+engine/
+build/src/
+build/work/
+build/dist/
+build/engine.tar.xz
+build/*.spec
+__pycache__/

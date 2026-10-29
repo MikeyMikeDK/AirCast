@@ -1,0 +1,58 @@
+diff --git a/renderers/video_renderer.c b/renderers/video_renderer.c
+index 673199e..8463870 100644
+--- a/renderers/video_renderer.c
++++ b/renderers/video_renderer.c
+@@ -65,6 +65,23 @@ static bool hls_video = false;
+ static bool use_x11 = false;
+ #endif
+ static bool logger_debug = false;
++
++/* reports each new frame size reaching the videosink (e.g. when the client rotates) */
++static GstPadProbeReturn
++videosink_caps_probe(GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
++    GstEvent *event = GST_PAD_PROBE_INFO_EVENT(info);
++    if (GST_EVENT_TYPE(event) == GST_EVENT_CAPS) {
++        GstCaps *caps = NULL;
++        gst_event_parse_caps(event, &caps);
++        GstStructure *s = gst_caps_get_structure(caps, 0);
++        gint width, height;
++        if (gst_structure_get_int(s, "width", &width) && gst_structure_get_int(s, "height", &height)) {
++            logger_log(logger, LOGGER_INFO, "video frame size %dx%d", width, height);
++        }
++    }
++    return GST_PAD_PROBE_OK;
++}
++
+ static gint64 hls_requested_start_position = 0;
+ static gint64 hls_seek_start = 0;
+ static gint64 hls_seek_end = 0;
+@@ -443,6 +460,17 @@ void video_renderer_init(logger_t *render_logger, const char *server_name, video
+             renderer_type[i]->appsrc = gst_bin_get_by_name (GST_BIN (renderer_type[i]->pipeline), "video_source");
+             g_assert(renderer_type[i]->appsrc);
+             g_object_set(renderer_type[i]->appsrc, "caps", caps, "stream-type", 0, "is-live", TRUE, "format", GST_FORMAT_TIME, NULL);
++            if (!rtp && !jpeg_pipeline) {
++                GString *sink_name = g_string_new(videosink);
++                g_string_append_printf(sink_name, "_%s", renderer_type[i]->codec);
++                GstElement *sink = gst_bin_get_by_name(GST_BIN(renderer_type[i]->pipeline), sink_name->str);
++                g_assert(sink);
++                GstPad *sink_pad = gst_element_get_static_pad(sink, "sink");
++                gst_pad_add_probe(sink_pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, videosink_caps_probe, NULL, NULL);
++                gst_object_unref(sink_pad);
++                gst_object_unref(sink);
++                g_string_free(sink_name, TRUE);
++            }
+             g_string_free(launch, TRUE);
+             gst_caps_unref(caps);
+             gst_object_unref(clock);
+diff --git a/uxplay.cpp b/uxplay.cpp
+index 942d25c..0f1abec 100644
+--- a/uxplay.cpp
++++ b/uxplay.cpp
+@@ -290,6 +290,7 @@ static void log(int level, const char* format, ...) {
+     va_start(vargs, format);
+     vprintf(format, vargs);
+     printf("\n");
++    fflush(stdout);
+     va_end(vargs);
+ }
+ 
