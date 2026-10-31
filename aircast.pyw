@@ -16,6 +16,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
+import firewall
 import portable
 import videowindow
 
@@ -215,8 +216,20 @@ class App:
             root.destroy()
             return
 
+        self.ensure_firewall()
         self.start()
         self.poll()
+
+    def ensure_firewall(self):
+        if firewall.is_allowed(UXPLAY):
+            return
+        if not messagebox.askyesno(
+                "AirCast",
+                "Windows Firewall skal tillade AirCast, ellers kan din iPhone/iPad ikke finde computeren.\n\n"
+                "Vil du tillade det nu? Windows beder om administrator-godkendelse."):
+            return
+        if not firewall.allow(UXPLAY):
+            messagebox.showerror("AirCast", "Firewall-tilladelsen blev ikke oprettet.")
 
     def collect_settings(self):
         pin = self.pin_var.get().strip()

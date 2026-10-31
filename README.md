@@ -10,12 +10,13 @@ AirCast er én portabel `AirCast.exe` (ca. 18 MB) og skal ikke installeres.
 
 ## Brug
 
-1. Start `AirCast.exe`. Første gang spørger Windows Firewall om netværksadgang: tryk **Tillad**.
-   Windows SmartScreen kan advare, fordi exe'en ikke er signeret: **Flere oplysninger → Kør alligevel**.
-2. På iPhone/iPad: Kontrolcenter → **Skærmspejling** → vælg PC'ens navn.
+1. Start `AirCast.exe`. Windows SmartScreen kan advare, fordi exe'en ikke er signeret:
+   **Flere oplysninger → Kør alligevel**.
+2. Første gang spørger AirCast, om den må tillade sig selv i Windows Firewall: svar **Ja** og godkend
+   administrator-dialogen. Uden det kan iPhone/iPad ikke finde PC'en.
+3. På iPhone/iPad: Kontrolcenter → **Skærmspejling** → vælg PC'ens navn.
 
-PC og iPhone/iPad skal være på samme netværk. Kan enheden ikke se PC'en, er det næsten altid firewallen:
-sæt netværket til **Privat** (Indstillinger → Netværk og internet) og tillad AirCast i firewallen.
+PC og iPhone/iPad skal være på samme netværk (ikke et gæstenetværk, og uden VPN).
 
 Indstillinger gemmes i `%APPDATA%\AirCast`. AirPlay-motoren pakkes ud til `%LOCALAPPDATA%\AirCast` første gang.
 
@@ -26,6 +27,7 @@ AirCast er et lille Python/Tk-program ([aircast.pyw](aircast.pyw)) oven på
 
 - [videowindow.py](videowindow.py) tilpasser videovinduet, når UxPlay melder en ny billedstørrelse.
 - [portable.py](portable.py) pakker den indbyggede motor (`engine.tar.xz`) ud første gang.
+- [firewall.py](firewall.py) tilføjer en firewall-tilladelse for motoren og fjerner Windows' egne blokeringer af den.
 - [patches/uxplay.patch](patches/uxplay.patch) er AirCasts to ændringer i UxPlay: loggen skrives straks (`fflush`),
   og hver ny videostørrelse meldes, så vinduet kan følge med, når enheden drejes.
 
